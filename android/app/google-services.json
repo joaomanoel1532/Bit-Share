@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "765801575548",
+    "project_id": "mdii-c4ae3",
+    "storage_bucket": "mdii-c4ae3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:765801575548:android:fad560a7ecf0b325df45f9",
+        "android_client_info": {
+          "package_name": "com.company.bitshare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOq8ScpyJ4b5qQr2RpiaxLGV-xLpPl8LY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:765801575548:android:831fc83de297e108df45f9",
+        "android_client_info": {
+          "package_name": "com.example.bitshare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOq8ScpyJ4b5qQr2RpiaxLGV-xLpPl8LY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
