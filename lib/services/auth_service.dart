@@ -17,6 +17,7 @@ class AuthService {
         await _firestore.collection('users').doc(user.uid).set({
           'nome': nome,
           'email': email,
+          'primeiroAcesso': true,
           'curso': '',
           'instituicao': '',
           'buscando': [],
@@ -24,7 +25,6 @@ class AuthService {
           'lista_desejos': [],
         });
       }
-
       return null; // Retorna null se não houver erro
     } on FirebaseAuthException catch (e) {
       return e.message; // Retorna a mensagem de erro do Firebase Auth
@@ -49,12 +49,54 @@ class AuthService {
   Future<bool> isFirstAccess(String userId) async {
     try {
       DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
-      return !userDoc.exists; // Se o documento não existir, é o primeiro acesso
-    } catch (e) {
+      if (userDoc.exists) {
+        return userDoc['primeiroAcesso'] ?? true;
+      } else {
+        return true;
+      }
+   } catch (e) {
       print("Erro ao verificar primeiro acesso: $e");
-      return true; // Assume que é o primeiro acesso em caso de erro
+    return true;
     }
   }
+  Future<void> salvarRespostasOnboardingCurso(String userId, String curso) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'curso': curso,
+      });
+    } catch (e) {
+      print("Erro ao salvar respostas do onboarding: $e");
+    }
+  }
+  Future<void> salvarRespostasOnboardingInstituicao(String userId, String instituicao) async{
+    try{
+      await _firestore.collection('users').doc(userId).update({
+        'instituicao': instituicao,
+      });
+    } catch (e) {
+      print("Erro ao salvar respostas do onboarding: $e");
+    }
+  }
+  Future<void> salvarRespostasOnboardingBuscando(String userId, List<String> buscando) async{
+    try{
+      await _firestore.collection('users').doc(userId).update({
+        'buscando': buscando,
+      });
+    } catch (e) {
+      print("Erro ao salvar respostas do onboarding: $e");
+    }
+  }
+  Future<void> salvarRespostasOnboardingInteresses(String userId, List<String> interesses) async{
+    try{
+      await _firestore.collection('users').doc(userId).update({
+        'interesses': interesses,
+        'primeiroAcesso': false,
+      });
+    } catch (e) {
+      print("Erro ao salvar respostas do onboarding: $e");
+    }
+  }
+
 
   // Logout
   Future<void> signOut() async {

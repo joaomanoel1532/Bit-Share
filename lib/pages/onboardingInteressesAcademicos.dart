@@ -1,32 +1,30 @@
-import './onboardingFinalizado.dart';
 import 'package:flutter/material.dart';
-
-
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import './onboardingFinalizado.dart';
 
 class OnboardingInteressesAcademicos extends StatefulWidget {
-  const OnboardingInteressesAcademicos ({Key? key}) : super(key: key);
+  const OnboardingInteressesAcademicos({Key? key}) : super(key: key);
 
   @override
   State<OnboardingInteressesAcademicos> createState() => _OnboardingInteressesAcademicos();
 }
 
 class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademicos> {
-  final TextEditingController nameController = TextEditingController();
-  int _currentStep = 5; // Etapa atual
-  final int _totalSteps = 6; // Total de etapas
-   // Lista de índices selecionados
+  final AuthService _authService = AuthService();
   final Set<int> _selectedIndices = {};
+  int _currentStep = 5;
+  final int _totalSteps = 6;
 
-  // Lista com as opções dos botões
   final List<String> options = [
     "Algoritmos",
     "Arquitetura de Computadores",
     "Banco de Dados",
     "Desenvolvimento de Software",
-    "Desenvolvimento de Mobile",
-    "Desenvolvimento de Web",
+    "Desenvolvimento Mobile",
+    "Desenvolvimento Web",
     "Engenharia de Software",
-    "Estrutura de Dados",
+    "Estruturas de Dados",
     "Machine Learning",
     "Segurança de Dados",
     "Sistemas Operacionais",
@@ -53,7 +51,6 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
           children: [
             const SizedBox(height: 20),
             
-            // Indicadores de progresso
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
@@ -72,8 +69,7 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
               ),
             ),
             const SizedBox(height: 32),
-        
-            // Imagem (substitua com a sua imagem)
+
             Image.asset(
               'assets/images/OnboardingInteresses.png',
               height: 150,
@@ -82,8 +78,7 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
               },
             ),
             const SizedBox(height: 24),
-        
-            // Texto de pergunta
+
             const Text(
               'Selecione seus Interesses',
               style: TextStyle(
@@ -94,8 +89,7 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            
-            // Lista de Botões Selecionáveis (com múltipla seleção)
+
             Expanded(
               child: ListView.builder(
                 itemCount: options.length,
@@ -106,9 +100,7 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
-                        backgroundColor: isSelected
-                            ? Colors.blue[700] // Cor selecionada
-                            : Colors.blue[300], // Cor padrão
+                        backgroundColor: isSelected ? Colors.blue[700] : Colors.blue[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -116,9 +108,9 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
                       onPressed: () {
                         setState(() {
                           if (isSelected) {
-                            _selectedIndices.remove(index); // Desmarca a opção
+                            _selectedIndices.remove(index);
                           } else {
-                            _selectedIndices.add(index); // Seleciona a opção
+                            _selectedIndices.add(index);
                           }
                         });
                       },
@@ -134,8 +126,7 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
                 },
               ),
             ),
-            
-            // Botões no rodapé
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
               child: Row(
@@ -151,15 +142,7 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {
-                      print("Opções selecionadas: ${_selectedIndices.map((i) => options[i]).toList()}");
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const OnboardingFinalizado(),
-                        ),
-                      );
-                    },
+                    onPressed: _selectedIndices.isNotEmpty ? _salvarEContinuar : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5271FF),
                       shape: const CircleBorder(),
@@ -174,5 +157,19 @@ class _OnboardingInteressesAcademicos extends State<OnboardingInteressesAcademic
         ),
       ),
     );
+  }
+
+  Future<void> _salvarEContinuar() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      List<String> interessesSelecionados = _selectedIndices.map((i) => options[i]).toList();
+      await _authService.salvarRespostasOnboardingInteresses(user.uid, interessesSelecionados);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const OnboardingFinalizado()),
+      );
+    } else {
+      print("Usuário não autenticado!");
+    }
   }
 }

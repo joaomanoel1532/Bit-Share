@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import './onboardingIES.dart';
 import 'package:flutter/material.dart';
-
+import '../services/auth_service.dart';
 
 class OnboardingCurso extends StatefulWidget {
   const OnboardingCurso({Key? key}) : super(key: key);
@@ -11,6 +12,7 @@ class OnboardingCurso extends StatefulWidget {
 
 class _OnboardingCursoState extends State<OnboardingCurso> {
   final TextEditingController nameController = TextEditingController();
+  final AuthService _authService = AuthService();
   int _currentStep = 2; // Etapa atual
   final int _totalSteps = 6; // Total de etapas
 
@@ -95,10 +97,18 @@ class _OnboardingCursoState extends State<OnboardingCurso> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      // if (_currentStep < _totalSteps) _currentStep++;
-                    });
+                  onPressed: () async {
+                    String nomeCurso = nameController.text.trim();
+                    // validação para campo não vazio
+                    if (nomeCurso.isEmpty){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Preencha seu curso.')),
+                      );
+                      return;
+                    }
+                    User? user = FirebaseAuth.instance.currentUser;
+                    await _authService.salvarRespostasOnboardingCurso(user!.uid, nomeCurso);
+                    
                     Navigator.push(
                       context,
                       MaterialPageRoute(

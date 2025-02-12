@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import './componentes/botao.dart';
-import 'onboardingNome.dart';
+import 'telaHome.dart'; 
+import 'onboardingCurso.dart';
 
 class OnboardingScreenInitial extends StatelessWidget {
   const OnboardingScreenInitial({super.key});
@@ -42,7 +43,7 @@ class OnboardingScreenInitial extends StatelessWidget {
             Botao(texto: 'Iniciar', onPressed: () {
               Navigator.push(context,
               MaterialPageRoute(
-                builder: (context) => const NameInputScreen(),
+                builder: (context) => const OnboardingCurso(),
                 ),
               );
 
@@ -51,7 +52,11 @@ class OnboardingScreenInitial extends StatelessWidget {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () {
-                // Ação ao pressionar "Pular"
+              Navigator.push(context,
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(),
+                ),
+              );
               },
               child: const Text(
                 'Pular',
