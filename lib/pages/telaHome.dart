@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'telaCriarAnuncio.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -141,7 +142,12 @@ class HomeScreen extends StatelessWidget {
         ],
         currentIndex: 0, // Índice selecionado (Home)
         onTap: (index) {
-          // Navegar para outras telas
+          if (index == 1) { // Se o usuário clicar em "Anunciar"
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const telaCriarAnuncio()),
+            );
+          }
         },
       ),
     );
