@@ -41,7 +41,7 @@ class telaCriarAnuncioState extends State<telaCriarAnuncio> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Criar Anúncio'),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xff5271FF), // Cor alterada
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -122,12 +122,12 @@ class telaCriarAnuncioState extends State<telaCriarAnuncio> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _salvarAnuncio,
-                  child: const Text('Anunciar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: const Color(0xff5271FF), // Cor alterada
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
+                  child: const Text('Anunciar'),
                 ),
               ),
             ],
