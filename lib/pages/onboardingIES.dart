@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import './onboardingInteressesCompras.dart';
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 
 
@@ -12,6 +14,7 @@ class OnboardingIES extends StatefulWidget {
 
 class _OnboardingIES extends State<OnboardingIES> {
   final TextEditingController nameController = TextEditingController();
+  final AuthService _authService = AuthService();
   int _currentStep = 3; // Etapa atual
   final int _totalSteps = 6; // Total de etapas
 
@@ -96,16 +99,23 @@ class _OnboardingIES extends State<OnboardingIES> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {  
-                    setState(() {
-                      // if (_currentStep < _totalSteps)_currentStep++;
-                      Navigator.push(context,
-                   MaterialPageRoute(
-                builder: (context) => const OnboardingInteressescompras(),
-                ),
-              );
-          
-                    });
+                  onPressed: () async {
+                    String instituicao = nameController.text.trim();
+                    //validação de campo nulo
+                    if(instituicao.isEmpty){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Preencha sua instituição.')),
+                      );
+                      return;
+                    }
+                    User? user = FirebaseAuth.instance.currentUser;
+                    await _authService.salvarRespostasOnboardingInstituicao(user!.uid, instituicao);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OnboardingInteressescompras(),
+                      )
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5271FF),

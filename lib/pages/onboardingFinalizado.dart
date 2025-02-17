@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'telaHome.dart';
 
 class OnboardingFinalizado extends StatefulWidget {
   const OnboardingFinalizado({Key? key}) : super(key: key);
@@ -87,8 +88,12 @@ class _OnboardingFinalizadoState extends State<OnboardingFinalizado> {
             // Botão de Home
             ElevatedButton(
               onPressed: () {
-                // Substituir por ação para ir para tela inicial
-                Navigator.of(context).pushReplacementNamed('/home');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(),
+                  )
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5271FF),
