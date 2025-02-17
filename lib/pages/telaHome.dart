@@ -1,202 +1,207 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Stream<QuerySnapshot> _getAnuncios() {
+    return _firestore.collection('anuncios').where('disponivel', isEqualTo: true).snapshots();
+  }
+
+  Stream<QuerySnapshot> _getListaDesejos() {
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
+    return _firestore.collection('users').doc(user.uid).collection('lista_desejos').snapshots();
+  }
+
+  Future<List<String>> _getCategoriasUsuario() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    return List<String>.from(doc.data()?['buscando'] ?? []);
+  }
+
+  int _selectedIndex = 0;
+  
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    // Adicione a navegação para outras telas aqui
+  }
+  Widget _buildCategoryButton(String categoria) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        backgroundColor: const Color(0xFF5271FF), // Cor azul específica
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+      onPressed: () {
+        // Ação ao clicar na categoria (se precisar adicionar navegação, pode colocar aqui)
+      },
+      child: Text(categoria, style: const TextStyle(color: Colors.white)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xffFAFAFA),
       appBar: AppBar(
-        title: const Text('Home'),
+        backgroundColor: Colors.white,
+        elevation: 2,
+        title: const Text('Home', style: TextStyle(color: Color(0xFF5271FF))),
+        iconTheme: const IconThemeData(color: Color(0xFF5271FF)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // Ação para pesquisar produtos
-            },
-          ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.chat)),
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Campo de pesquisa
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Pesquisar produtos',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+            TextField(
+              decoration: InputDecoration(
+                hintText: "Pesquisar produtos",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.grey.shade200,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Produtos em destaque
+            const Text("Produtos em destaque", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            StreamBuilder<QuerySnapshot>(
+              stream: _getAnuncios(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const CircularProgressIndicator();
+                final anuncios = snapshot.data!.docs;
+                if (anuncios.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("Ainda não há anúncios cadastrados.", textAlign: TextAlign.center),
+                  );
+                }
+                return SizedBox(
+                  height: 140,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: anuncios.length,
+                    itemBuilder: (context, index) {
+                      final anuncio = anuncios[index].data() as Map<String, dynamic>;
+                      return _buildProductCard(anuncio);
+                    },
                   ),
-                ),
-              ),
+                );
+              },
             ),
-
-            // Seção: Produtos em destaque
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Produtos em destaque',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(
-              height: 150,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildProductCard('Memoria RAM DDR4 8GB', 'assets/ram.jpg'),
-                  _buildProductCard('Livro Algor', 'assets/livro_algor.jpg'),
-                ],
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'Ver mais',
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-            ),
-
             const SizedBox(height: 20),
 
-            // Seção: Lista de desejos
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Lista de desejos',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+            // Lista de desejos
+            const Text("Lista de desejos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            StreamBuilder<QuerySnapshot>(
+              stream: _getListaDesejos(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const CircularProgressIndicator();
+                final desejos = snapshot.data!.docs;
+                if (desejos.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("Sua lista de desejos está vazia.", textAlign: TextAlign.center),
+                  );
+                }
+                return SizedBox(
+                  height: 140,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: desejos.length,
+                    itemBuilder: (context, index) {
+                      final desejo = desejos[index].data() as Map<String, dynamic>;
+                      return _buildProductCard(desejo);
+                    },
+                  ),
+                );
+              },
             ),
-            SizedBox(
-              height: 150,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildProductCard('Tablet M10', 'assets/tablet.jpg'),
-                  _buildProductCard('Arduino', 'assets/arduino.jpg'),
-                ],
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'Ver mais',
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-            ),
-
             const SizedBox(height: 20),
 
-            // Seção: Categorias
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Categorias',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              childAspectRatio: 3,
-              children: [
-                _buildCategoryItem('Livros'),
-                _buildCategoryItem('Listas de exercício'),
-                _buildCategoryItem('Periféricos'),
-                _buildCategoryItem('Arduino'),
-              ],
+            // Categorias
+            const Text("Categorias", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            FutureBuilder<List<String>>(
+              future: _getCategoriasUsuario(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const CircularProgressIndicator();
+                final categorias = snapshot.data!;
+                return Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: categorias.map((categoria) => _buildCategoryButton(categoria)).toList(),
+                );
+              },
             ),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        elevation: 10,
+        selectedItemColor: const Color(0xFFEE7124),
+        unselectedItemColor: const Color(0xff5271FF),
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12, 
+          color: Color(0xFFEE7124)),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12, 
+          color: Color(0xff5271FF)),
+        showUnselectedLabels: true,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Anunciar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Pedidos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Anúncios',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: "Anunciar"),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: "Pedidos"),
+          BottomNavigationBarItem(icon: Icon(Icons.verified), label: "Anúncios"),
         ],
-        currentIndex: 0, // Índice selecionado (Home)
-        onTap: (index) {
-          // Navegar para outras telas
-        },
       ),
     );
   }
 
-  // Widget para construir cards de produtos
-  Widget _buildProductCard(String title, String imagePath) {
-    return Container(
-      width: 150,
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+  Widget _buildProductCard(Map<String, dynamic> produto) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            child: Image.asset(
-              imagePath,
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              produto['fotos'] != null && produto['fotos'].isNotEmpty ? produto['fotos'][0] : "https://via.placeholder.com/100",
               height: 100,
-              width: double.infinity,
+              width: 100,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, size: 100),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
+          const SizedBox(height: 5),
+          Text(
+            produto['titulo'] ?? "Produto",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
-    );
-  }
-
-  // Widget para construir itens de categoria
-  Widget _buildCategoryItem(String title) {
-    return Card(
-      margin: const EdgeInsets.all(8),
-      child: Center(
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
       ),
     );
   }
