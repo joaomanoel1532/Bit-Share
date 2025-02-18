@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'imgur_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -94,6 +96,40 @@ class AuthService {
       });
     } catch (e) {
       print("Erro ao salvar respostas do onboarding: $e");
+    }
+  }
+  Future<String?> salvarAnuncio({
+    required String titulo,
+    required String descricao,
+    required String preco,
+    required String categoria,
+    required File imageFile,
+  }) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null) {
+        return "Usuário não autenticado.";
+      }
+
+      String? imageUrl = await ImgurService.uploadImage(imageFile);
+      if (imageUrl == null) {
+        return "Erro ao enviar imagem.";
+      }
+
+      await _firestore.collection('anuncios').add({
+        'titulo': titulo,
+        'descricao': descricao,
+        'preco': preco,
+        'categoria': categoria,
+        'imagem': imageUrl,
+        'userId': user.uid,
+        'criado_em': FieldValue.serverTimestamp(),
+        'disponivel': true,
+      });
+
+      return null;
+    } catch (e) {
+      return "Erro ao salvar anúncio: $e";
     }
   }
 

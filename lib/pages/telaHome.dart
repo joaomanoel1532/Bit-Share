@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'telaCriarAnuncio.dart';
+import 'telaExibirAnuncio.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -37,6 +39,24 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
     });
     // Adicione a navegação para outras telas aqui
+    if (index == 0){
+      Navigator.push(
+        context, 
+        MaterialPageRoute(builder: (context) => HomeScreen()
+      ),);
+    }
+    if (index == 1){
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => TelaCriarAnuncio()
+        
+        ),
+      );
+    } else{
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
   Widget _buildCategoryButton(String categoria) {
     return ElevatedButton(
@@ -180,29 +200,45 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> produto) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.network(
-              produto['fotos'] != null && produto['fotos'].isNotEmpty ? produto['fotos'][0] : "https://via.placeholder.com/100",
-              height: 100,
-              width: 100,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, size: 100),
+    // Verifica se o campo 'imagem' existe e é uma URL válida
+    final String imageUrl = produto['imagem'] ?? "https://via.placeholder.com/100";
+
+    // Debug: Exibe a URL da imagem no console
+    print("Carregando imagem: $imageUrl");
+
+    return GestureDetector(
+      onTap: (){
+        Navigator.push(context, MaterialPageRoute(builder: (Context) => TelaExibicaoAnuncio(anuncio: produto)));
+      },
+        child:Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                imageUrl,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Debug: Exibe o erro no console
+                  print("Erro ao carregar imagem: $error");
+                  return const Icon(Icons.image_not_supported, size: 100);
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            produto['titulo'] ?? "Produto",
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: 5),
+            Text(
+              produto['titulo'] ?? "Produto",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
+    
   }
 }
