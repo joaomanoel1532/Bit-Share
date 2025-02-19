@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:bitshare/pages/componentes/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '/services/auth_service.dart'; 
@@ -17,6 +18,7 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
   final TextEditingController _precoController = TextEditingController();
   String? _categoriaSelecionada;
   bool _isLoading = false;
+  int _selectedIndex = 1;
 
   Future<void> _selecionarImagem() async {
     final ImagePicker picker = ImagePicker();
@@ -30,9 +32,15 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
   }
 
   Future<void> _salvarAnuncio() async {
+    final user = AuthService().currentUser;
     String titulo = _tituloController.text;
     String descricao = _descricaoController.text;
     String preco = _precoController.text;
+    if (user == null){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você precisa estar logado para criar um anúncio!')),
+      );
+    }
 
     if (titulo.isEmpty || descricao.isEmpty || preco.isEmpty || _categoriaSelecionada == null || _image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +75,8 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseScreen(selectedIndex: 1, child: 
+    Scaffold(
       appBar: AppBar(
         title: const Text('Criar Anúncio'),
         backgroundColor: const Color(0xff5271FF),
@@ -125,6 +134,7 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
           ],
         ),
       ),
+    )
     );
   }
 

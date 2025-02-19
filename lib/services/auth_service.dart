@@ -25,6 +25,7 @@ class AuthService {
           'buscando': [],
           'interesses': [],
           'lista_desejos': [],
+          'pedidos': [],
         });
       }
       return null; // Retorna null se não houver erro
@@ -98,6 +99,18 @@ class AuthService {
       print("Erro ao salvar respostas do onboarding: $e");
     }
   }
+  Future<void> salvarListaDesejos(String userId, String anuncioId) async {
+    try{
+      await _firestore.collection('users').doc(userId).update({
+        'lista_desejos': FieldValue.arrayUnion([anuncioId]),
+      });
+    } catch (e){
+      print('Erro ao salvar na lista de desejos: $e');
+    }
+  }
+
+  User? get currentUser => _auth.currentUser;
+
   Future<String?> salvarAnuncio({
     required String titulo,
     required String descricao,
