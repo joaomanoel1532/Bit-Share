@@ -109,7 +109,7 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _categoriaSelecionada,
-              items: ['Eletrônicos', 'Livros', 'Componentes', 'Acessórios']
+              items: ['Códigos', 'Componentes', 'Computador', 'Lista de exercício' , 'Livros' , 'Periféricos']
                   .map((String categoria) => DropdownMenuItem(value: categoria, child: Text(categoria)))
                   .toList(),
               onChanged: (value) {
@@ -126,10 +126,16 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
               onPressed: _isLoading ? null : _salvarAnuncio,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xff5271FF),
+                foregroundColor: Colors.black, // Define a cor do texto como preto
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: _isLoading ? const CircularProgressIndicator() : const Text('Anunciar'),
+              child: _isLoading 
+                  ? const CircularProgressIndicator() 
+                  : const Text(
+                      'Anunciar', 
+                      style: TextStyle(color: Colors.black), // Cor do texto preta
+                    ),
             ),
           ],
         ),
