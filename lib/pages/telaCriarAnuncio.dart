@@ -18,7 +18,6 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
   final TextEditingController _precoController = TextEditingController();
   String? _categoriaSelecionada;
   bool _isLoading = false;
-  int _selectedIndex = 1;
 
   Future<void> _selecionarImagem() async {
     final ImagePicker picker = ImagePicker();

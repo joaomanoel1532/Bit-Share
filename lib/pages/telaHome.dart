@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'telaExibirAnuncio.dart';
 import 'componentes/navbar.dart';
-import 'telaAnuncios.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -19,7 +18,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _pesquisaController = TextEditingController();
 
   Stream<QuerySnapshot> _getAnuncios() {
-    return _firestore.collection('anuncios').where('disponivel', isEqualTo: true).snapshots();
+    if (_pesquisa.isEmpty) {
+      return _firestore.collection('anuncios').where('disponivel', isEqualTo: true).snapshots();
+    } else {
+      return _firestore
+          .collection('anuncios')
+          .where('titulo', isGreaterThanOrEqualTo: _pesquisa)
+          .where('titulo', isLessThanOrEqualTo: '$_pesquisa\uf8ff')
+          .snapshots();
+    }
   }
 
   Stream<List<Map<String, dynamic>>> _getListaDesejos() {
@@ -47,8 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-
-
   Future<List<String>> _getCategoriasUsuario() async {
     final user = _auth.currentUser;
     if (user == null) return [];
@@ -56,16 +61,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return List<String>.from(doc.data()?['buscando'] ?? []);
   }
 
-
   Widget _buildCategoryButton(String categoria) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        backgroundColor: const Color(0xFF5271FF), // Cor azul específica
+        backgroundColor: const Color(0xFF5271FF),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
       onPressed: () {
-        // Ação ao clicar na categoria (se precisar adicionar navegação, pode colocar aqui)
+        
       },
       child: Text(categoria, style: const TextStyle(color: Colors.white)),
     );
@@ -82,9 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Home', style: TextStyle(color: Color(0xFF5271FF))),
         iconTheme: const IconThemeData(color: Color(0xFF5271FF)),
         actions: [
-          IconButton(onPressed: () {
-            showSearch(context: context, delegate: PesquisaProdutos());},
-            icon: const Icon(Icons.search)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.chat)),
         ],
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               controller: _pesquisaController,
               onChanged: (value){
                 setState(() {
-                  _pesquisa = value;
+                  _pesquisa = value.trim();
                 });
               },
               decoration: InputDecoration(
@@ -110,8 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Produtos em destaque
             const Text("Produtos em destaque", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             StreamBuilder<QuerySnapshot>(
               stream: _getAnuncios(),
@@ -121,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (anuncios.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text("Ainda não há anúncios cadastrados.", textAlign: TextAlign.center),
+                    child: Text("Nenhum produto encontrado.", textAlign: TextAlign.center),
                   );
                 }
                 return SizedBox(
@@ -139,31 +138,24 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 20),
-
-            // Lista de desejos
-            const Text("Lista de desejos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text("Lista de Desejos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             StreamBuilder<List<Map<String, dynamic>>>(
               stream: _getListaDesejos(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                if (!snapshot.hasData) return const CircularProgressIndicator();
+                final desejos = snapshot.data!;
+                if (desejos.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text("Sua lista de desejos está vazia.", textAlign: TextAlign.center),
+                    child: Text("Sua lista de desejos está vazia."),
                   );
                 }
-
-                final desejos = snapshot.data!;
-
                 return SizedBox(
                   height: 140,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: desejos.length,
-                    itemBuilder: (context, index) {
+                    itemBuilder: (context, index){
                       final produto = desejos[index];
                       return _buildProductCard(produto, produto['id']);
                     },
@@ -172,17 +164,17 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 20),
-
-            // Categorias
             const Text("Categorias", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             FutureBuilder<List<String>>(
               future: _getCategoriasUsuario(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const CircularProgressIndicator();
                 final categorias = snapshot.data!;
+                if (categorias.isEmpty) {
+                  return const Text("Nenhuma categoria encontrada.");
+                }
                 return Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
+                  spacing: 8,
                   children: categorias.map((categoria) => _buildCategoryButton(categoria)).toList(),
                 );
               },
@@ -190,8 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    )
-    );
+    ));
   }
 
 

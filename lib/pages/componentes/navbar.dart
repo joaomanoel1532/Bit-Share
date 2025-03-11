@@ -16,8 +16,7 @@ class BaseScreen extends StatefulWidget {
 
 class _BaseScreenState extends State<BaseScreen> {
   void _onItemTapped(int index) {
-    if (index == widget.selectedIndex) return; // Evita navegação desnecessária
-
+    if (index == widget.selectedIndex) return; 
     Widget destination;
     switch (index) {
       case 0:
@@ -36,7 +35,7 @@ class _BaseScreenState extends State<BaseScreen> {
         return;
     }
 
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => destination),
     );

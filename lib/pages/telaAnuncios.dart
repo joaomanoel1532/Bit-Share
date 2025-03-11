@@ -1,7 +1,7 @@
 import 'package:bitshare/pages/componentes/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'telaExibirAnuncio.dart'; // Importe a tela de exibição do anúncio
+import 'telaExibirAnuncio.dart'; 
 
 class TelaProdutos extends StatefulWidget {
   @override
@@ -30,18 +30,10 @@ class _TelaProdutosState extends State<TelaProdutos> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Produtos"),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                showSearch(context: context, delegate: PesquisaProdutos());
-              },
-            ),
-          ],
         ),
         body: Column(
           children: [
-            // Barra de pesquisa
+            // Barra de pesquisa única
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
@@ -52,7 +44,7 @@ class _TelaProdutosState extends State<TelaProdutos> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: "Pesquisar produtos",
+                  hintText: "Pesquise produtos",
                   prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -100,23 +92,31 @@ class _TelaProdutosState extends State<TelaProdutos> {
                     itemCount: produtos.length,
                     itemBuilder: (context, index) {
                       final produto = produtos[index];
-                      final anuncioId = produto.id; // ID do documento
-                      final anuncio = produto.data() as Map<String, dynamic>; // Dados do anúncio
+                      final anuncioId = produto.id;
+                      final anuncio = produto.data() as Map<String, dynamic>;
+
+                      // Tratando o campo de fotos
+                      final dynamic fotosField = anuncio['imagem'];
+                      final List<String> fotos = fotosField is String
+                          ? [fotosField]
+                          : (fotosField as List<dynamic>).map((foto) => foto.toString()).toList();
+                      final String? imagemUrl = fotos.isNotEmpty ? fotos.first : null;
 
                       return ListTile(
-                        leading: Image.network(
-                          anuncio['imagem'],
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.image_not_supported, size: 50);
-                          },
-                        ),
+                        leading: imagemUrl != null
+                            ? Image.network(
+                                imagemUrl,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(Icons.image_not_supported, size: 50);
+                                },
+                              )
+                            : const Icon(Icons.image_not_supported, size: 50),
                         title: Text(anuncio['titulo']),
                         subtitle: Text("R\$${anuncio['preco']}"),
                         onTap: () {
-                          // Navegar para a tela de detalhes do anúncio
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -137,64 +137,5 @@ class _TelaProdutosState extends State<TelaProdutos> {
         ),
       ),
     );
-  }
-}
-
-// Classe para pesquisa no AppBar
-class PesquisaProdutos extends SearchDelegate {
-  @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [IconButton(icon: const Icon(Icons.clear), onPressed: () => query = "")];
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('anuncios').snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-
-        final resultados = snapshot.data!.docs.where((doc) {
-          final titulo = doc['titulo'].toString().toLowerCase();
-          return titulo.contains(query.toLowerCase());
-        }).toList();
-
-        return ListView.builder(
-          itemCount: resultados.length,
-          itemBuilder: (context, index) {
-            final produto = resultados[index];
-            final anuncioId = produto.id; // ID do documento
-            final anuncio = produto.data() as Map<String, dynamic>; // Dados do anúncio
-
-            return ListTile(
-              title: Text(anuncio['titulo']),
-              subtitle: Text("R\$${anuncio['preco']}"),
-              onTap: () {
-                // Navegar para a tela de detalhes do anúncio
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TelaExibicaoAnuncio(
-                      anuncio: anuncio,
-                      anuncioId: anuncioId,
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return buildResults(context);
   }
 }
