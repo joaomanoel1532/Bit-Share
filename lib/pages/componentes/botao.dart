@@ -15,7 +15,7 @@ class Botao extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF5271FF),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         minimumSize: const Size(200, 50),
         maximumSize: const Size(296, 50),
       ),
