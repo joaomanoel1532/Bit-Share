@@ -2,6 +2,12 @@
 
 A new Flutter project.
 
+## Version
+java_SDK 17
+android SDK-build Tools 36-rc5
+Android SDK-Command-line tools (latest)
+Android SDK-Platform-Tools 35.0.2
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
