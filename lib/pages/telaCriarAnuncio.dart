@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:bitshare/pages/componentes/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '/services/auth_service.dart'; 
@@ -30,9 +31,15 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
   }
 
   Future<void> _salvarAnuncio() async {
+    final user = AuthService().currentUser;
     String titulo = _tituloController.text;
     String descricao = _descricaoController.text;
     String preco = _precoController.text;
+    if (user == null){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você precisa estar logado para criar um anúncio!')),
+      );
+    }
 
     if (titulo.isEmpty || descricao.isEmpty || preco.isEmpty || _categoriaSelecionada == null || _image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +74,8 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseScreen(selectedIndex: 1, child: 
+    Scaffold(
       appBar: AppBar(
         title: const Text('Criar Anúncio'),
         backgroundColor: const Color(0xff5271FF),
@@ -100,7 +108,7 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _categoriaSelecionada,
-              items: ['Eletrônicos', 'Livros', 'Componentes', 'Acessórios']
+              items: ['Códigos', 'Componentes', 'Computador', 'Lista de exercício' , 'Livros' , 'Periféricos']
                   .map((String categoria) => DropdownMenuItem(value: categoria, child: Text(categoria)))
                   .toList(),
               onChanged: (value) {
@@ -117,14 +125,21 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
               onPressed: _isLoading ? null : _salvarAnuncio,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xff5271FF),
+                foregroundColor: Colors.black, // Define a cor do texto como preto
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: _isLoading ? const CircularProgressIndicator() : const Text('Anunciar'),
+              child: _isLoading 
+                  ? const CircularProgressIndicator() 
+                  : const Text(
+                      'Anunciar', 
+                      style: TextStyle(color: Colors.black), // Cor do texto preta
+                    ),
             ),
           ],
         ),
       ),
+    )
     );
   }
 

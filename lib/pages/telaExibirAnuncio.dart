@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'componentes/botao.dart';
+import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 class TelaExibicaoAnuncio extends StatelessWidget {
   final Map<String, dynamic> anuncio;
-
-  const TelaExibicaoAnuncio({super.key, required this.anuncio});
+  final AuthService _authService = AuthService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  var anuncioId;
+  TelaExibicaoAnuncio({super.key, required this.anuncio, required this.anuncioId});
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +48,13 @@ class TelaExibicaoAnuncio extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Botao(texto: 'Adicionar a lista de desejos', onPressed: () async{
-
-
+              final user = _auth.currentUser;
+              if (user != null){
+                await _authService.salvarListaDesejos(user!.uid, anuncioId);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Adicionado à lista de desejos!')
+                ),
+                );
+              }
             },
             ),
             const SizedBox(height: 10),
