@@ -16,18 +16,94 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _pesquisa = "";
   final TextEditingController _pesquisaController = TextEditingController();
+  List<Map<String, dynamic>> _recommendedProducts = [];
+  bool _isLoading = true;
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecommendedProducts();
+  }
 
-  Stream<QuerySnapshot> _getAnuncios() {
-    if (_pesquisa.isEmpty) {
-      return _firestore.collection('anuncios').where('disponivel', isEqualTo: true).snapshots();
+  Future<void> _fetchRecommendedProducts() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      // Usuário não autenticado: recomendar produtos aleatórios
+      List<Map<String, dynamic>> randomProducts = await _getRandomProducts();
+      setState(() {
+        _recommendedProducts = randomProducts;
+        _isLoading = false;
+      });
     } else {
-      return _firestore
-          .collection('anuncios')
-          .where('titulo', isGreaterThanOrEqualTo: _pesquisa)
-          .where('titulo', isLessThanOrEqualTo: '$_pesquisa\uf8ff')
-          .snapshots();
+      // Usuário autenticado: buscar categorias de interesse
+      List<String> categorias = await _getCategoriasUsuario();
+
+      List<Map<String, dynamic>> recommended =
+          await _getProductsByCategories(categorias);
+
+      if (recommended.isEmpty) {
+        // Se não houver recomendações personalizadas, recomendar aleatoriamente
+        recommended = await _getRandomProducts();
+      }
+
+      setState(() {
+        _recommendedProducts = recommended;
+        _isLoading = false;
+      });
     }
   }
+
+  Future<List<Map<String, dynamic>>> _getProductsByCategories(
+      List<String> categorias) async {
+    try {
+      if (categorias.isEmpty) return [];
+
+      QuerySnapshot query = await _firestore
+          .collection('anuncios')
+          .where('categoria', whereIn: categorias)
+          .where('disponivel', isEqualTo: true)
+          .limit(10)
+          .get();
+
+      return query.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getRandomProducts() async {
+    try {
+      QuerySnapshot query = await _firestore
+          .collection('anuncios')
+          .where('disponivel', isEqualTo: true)
+          .limit(10)
+          .get();
+
+      return query.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; 
+        return data;
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Stream<QuerySnapshot> _getAnuncios() {
+  //   if (_pesquisa.isEmpty) {
+  //     return _firestore.collection('anuncios').where('disponivel', isEqualTo: true).snapshots();
+  //   } else {
+  //     return _firestore
+  //         .collection('anuncios')
+  //         .where('titulo', isGreaterThanOrEqualTo: _pesquisa)
+  //         .where('titulo', isLessThanOrEqualTo: '$_pesquisa\uf8ff')
+  //         .snapshots();
+  //   }
+  // }
 
   Stream<List<Map<String, dynamic>>> _getListaDesejos() {
   final user = _auth.currentUser;
@@ -112,32 +188,53 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text("Produtos em destaque", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            StreamBuilder<QuerySnapshot>(
-              stream: _getAnuncios(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const CircularProgressIndicator();
-                final anuncios = snapshot.data!.docs;
-                if (anuncios.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text("Nenhum produto encontrado.", textAlign: TextAlign.center),
-                  );
-                }
-                return SizedBox(
-                  height: 140,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: anuncios.length,
-                    itemBuilder: (context, index) {
-                      final anuncio = anuncios[index].data() as Map<String, dynamic>;
-                      final anuncioId = anuncios[index].id;
-                      return _buildProductCard(anuncio, anuncioId);
-                    },
-                  ),
-                );
-              },
-            ),
+            // Recomendações personalizadas ou aleatórias
+            const Text("Recomendações para você", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _recommendedProducts.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text("Nenhum produto encontrado.", textAlign: TextAlign.center),
+                      )
+                    : SizedBox(
+                        height: 140,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _recommendedProducts.length,
+                          itemBuilder: (context, index) {
+                            final produto = _recommendedProducts[index];
+                            final anuncioId = produto['id'];
+                            return _buildProductCard(produto, anuncioId);
+                          },
+                        ),
+                      ),
+            // const Text("Produtos em destaque", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            // StreamBuilder<QuerySnapshot>(
+            //   stream: _getAnuncios(),
+            //   builder: (context, snapshot) {
+            //     if (!snapshot.hasData) return const CircularProgressIndicator();
+            //     final anuncios = snapshot.data!.docs;
+            //     if (anuncios.isEmpty) {
+            //       return const Padding(
+            //         padding: EdgeInsets.all(8.0),
+            //         child: Text("Nenhum produto encontrado.", textAlign: TextAlign.center),
+            //       );
+            //     }
+            //     return SizedBox(
+            //       height: 140,
+            //       child: ListView.builder(
+            //         scrollDirection: Axis.horizontal,
+            //         itemCount: anuncios.length,
+            //         itemBuilder: (context, index) {
+            //           final anuncio = anuncios[index].data() as Map<String, dynamic>;
+            //           final anuncioId = anuncios[index].id;
+            //           return _buildProductCard(anuncio, anuncioId);
+            //         },
+            //       ),
+            //     );
+            //   },
+            // ),
             const SizedBox(height: 20),
             const Text("Lista de Desejos", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             StreamBuilder<List<Map<String, dynamic>>>(
