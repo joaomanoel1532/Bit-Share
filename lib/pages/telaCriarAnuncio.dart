@@ -76,9 +76,12 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
   Widget build(BuildContext context) {
     return BaseScreen(selectedIndex: 1, child: 
     Scaffold(
+      backgroundColor: const Color(0xffFAFAFA),
       appBar: AppBar(
-        title: const Text('Criar Anúncio'),
-        backgroundColor: const Color(0xff5271FF),
+        iconTheme: const IconThemeData(color: Color(0xFF5271FF)),
+        backgroundColor: Colors.white,
+        elevation: 2,
+        title: const Text('Criar Anúncio', style: TextStyle(color: Color(0xFF5271FF))),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -125,15 +128,14 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
               onPressed: _isLoading ? null : _salvarAnuncio,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xff5271FF),
-                foregroundColor: Colors.black, // Define a cor do texto como preto
                 padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
               ),
               child: _isLoading 
                   ? const CircularProgressIndicator() 
                   : const Text(
                       'Anunciar', 
-                      style: TextStyle(color: Colors.black), // Cor do texto preta
+                      style: TextStyle(color: Colors.white), // Cor do texto preta
                     ),
             ),
           ],
@@ -143,11 +145,28 @@ class _TelaCriarAnuncioState extends State<TelaCriarAnuncio> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String label, int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
-    return TextField(controller: controller, maxLines: maxLines, keyboardType: keyboardType, decoration: _inputDecoration(label));
+  Widget _buildTextField({
+    required TextEditingController controller, 
+    required String label, int maxLines = 1, 
+    TextInputType keyboardType = TextInputType.text}) {
+    return TextField(
+      controller: controller, 
+      maxLines: maxLines, 
+      keyboardType: keyboardType, 
+      decoration: _inputDecoration(label));
   }
 
   InputDecoration _inputDecoration(String label) {
-    return InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)));
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Color(0xff5271FF)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xff5271FF)),
+      ),
+    );
   }
 }

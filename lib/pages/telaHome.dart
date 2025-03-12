@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         backgroundColor: const Color(0xFF5271FF),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        
       ),
       onPressed: () {
         
